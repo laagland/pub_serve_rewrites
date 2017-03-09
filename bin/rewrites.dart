@@ -8,16 +8,22 @@ main(List<String> args) async {
 
   ArgParser parser = _createArgsParser();
   ArgResults results = parser.parse(args);
+  IdentityData identity;
 
   if (results['help']) {
     print(parser.usage);
     exit(1);
   }
 
+  if (results['ssl']) {
+    identity = await IdentityData.parse('rewrites.yaml');
+  }
+
   ProxyServer.start(
       host: results['hostname'],
       port: int.parse(results['port']),
       rules: parseRewriteFile('rewrites.yaml'),
+      identity: identity,
       pubserve: new PubServe(
           hostname:'localhost',
           port: int.parse(results['proxied-server-port']),
@@ -44,6 +50,9 @@ ArgParser _createArgsParser() {
         help: 'Mode to run transformers in.',
         defaultsTo: 'debug'
     )
+    ..addFlag('ssl',
+        help: 'Use SSL mode, needs certificate paths in rewrites.yaml.',
+        defaultsTo: false)
     ..addFlag('all',
         help: 'Use all default source directories.',
         defaultsTo: false)

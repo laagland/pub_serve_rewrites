@@ -9,6 +9,7 @@ import 'package:shelf_proxy/shelf_proxy.dart' show proxyHandler;
 import 'package:shelf/src/message.dart' show getBody;
 import 'pubserve.dart';
 import 'rules.dart';
+import 'identity.dart';
 import 'dart:convert';
 
 const String DEFAULT_HOST = 'localhost';
@@ -19,12 +20,13 @@ class ProxyServer {
   final String host;
   final int port;
   final RewriteRules rules;
+  final IdentityData identity;
   final PubServe pubserve;
 
-  ProxyServer._(this.host,this.port,this.rules,this.pubserve);
+  ProxyServer._(this.host, this.port, this.rules, this.identity, this.pubserve);
 
-  static start({String host,int port,RewriteRules rules,PubServe pubserve}) async {
-    ProxyServer server = new ProxyServer._(host,port,rules,pubserve);
+  static start({String host, int port, RewriteRules rules, IdentityData identity, PubServe pubserve}) async {
+    ProxyServer server = new ProxyServer._(host, port, rules, identity, pubserve);
     await pubserve.start();
     server._handlePubServeOutput();
     server._start();
@@ -36,12 +38,16 @@ class ProxyServer {
 
   _onData(String data){
     data = data.trim();
-    data = data.replaceAll('http://${pubserve.hostname}:${pubserve.port}','http://${host}:${port}');
+//    data = data.replaceAll('http://${pubserve.hostname}:${pubserve.port}','http://${host}:${port}');
+    String str = 'http' + (identity != null ? 's' : '') + '://${pubserve.hostname}:${pubserve.port}';
+    String replace = 'http' + (identity != null ? 's' : '') + '://${host}:${port}';
+    data = data.replaceAll(str,replace);
     print(data);
   }
 
   _start(){
-    Uri uri = new Uri(scheme:'http',host: pubserve.hostname,port: pubserve.port);
+    Uri uri = new Uri(scheme: 'http', host: pubserve.hostname, port: pubserve.port);
+
     shelf.serve(_handler(uri.toString()), host, port).then((server) {
       print('Proxying at http://${server.address.host}:${server.port}');
     });
