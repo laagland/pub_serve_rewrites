@@ -5,3 +5,7 @@ rewrites:
   to: admin.html
 - rewrite: (.*)
   to: index.html
+ssl:
+- cert: cert.pem
+  key: key.pem
+  password: key.passphrase

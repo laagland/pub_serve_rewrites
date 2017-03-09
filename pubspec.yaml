@@ -6,10 +6,9 @@ homepage: https://github.com/adaojunior/pub_serve_rewrites
 environment:
   sdk: ">=1.8.0 <2.0.0"
 dependencies:
-  shelf_proxy: "^0.1.0+2"
+  shelf_proxy:
+    git: git://github.com/laagland/shelf_proxy.git
   args: "^0.13.2"
   yaml: "^2.1.7"
-dev_dependencies:
-  test: '>=0.12.0 <0.13.0'
 executables:
   rewrites: null

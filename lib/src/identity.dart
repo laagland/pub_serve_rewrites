@@ -21,12 +21,15 @@ class IdentityData {
 
         //else use ssl
         if (document['ssl'] is! List) throw "[ssl] field must be an list";
-        if (!document['ssl'].containsKey['cert']) throw "[ssl] field must contain a [cert] field";
-        if (!document['ssl'].containsKey['key']) throw "[ssl] field must contain a [key] field";
-        //todo: password optional?
-        if (!document['ssl'].containsKey['password']) throw "[ssl] field must contain a [password] field";
+        if (!document['ssl'][0].containsKey('cert')) throw "[ssl] field must contain a [cert] field";
+        if (!document['ssl'][0].containsKey('key')) throw "[ssl] field must contain a [key] field";
+        if (!document['ssl'][0].containsKey('password')) throw "[ssl] field must contain a [password] field";
 
-        IdentityData identity = new IdentityData._(document['ssl']['cert'].toString(), document['ssl']['key'].toString(), document['ssl']['password'].toString());
+        //read password from file
+        File password_file = new File(document['ssl'][0]['password'].toString());
+        String password = password_file.readAsStringSync();
+
+        IdentityData identity = new IdentityData._(document['ssl'][0]['cert'].toString(), document['ssl'][0]['key'].toString(), password);
         return identity;
     }
 }

@@ -11,6 +11,7 @@ import 'pubserve.dart';
 import 'rules.dart';
 import 'identity.dart';
 import 'dart:convert';
+import 'dart:io' show SecurityContext;
 
 const String DEFAULT_HOST = 'localhost';
 const int DEFAULT_PORT = 8080;
@@ -38,19 +39,29 @@ class ProxyServer {
 
   _onData(String data){
     data = data.trim();
-//    data = data.replaceAll('http://${pubserve.hostname}:${pubserve.port}','http://${host}:${port}');
     String str = 'http' + (identity != null ? 's' : '') + '://${pubserve.hostname}:${pubserve.port}';
     String replace = 'http' + (identity != null ? 's' : '') + '://${host}:${port}';
     data = data.replaceAll(str,replace);
-    print(data);
   }
 
   _start(){
-    Uri uri = new Uri(scheme: 'http', host: pubserve.hostname, port: pubserve.port);
+    if(identity != null) {
+      Uri uri = new Uri(scheme:'https',host: pubserve.hostname,port: pubserve.port);
 
-    shelf.serve(_handler(uri.toString()), host, port).then((server) {
-      print('Proxying at http://${server.address.host}:${server.port}');
-    });
+      SecurityContext serverContext = SecurityContext.defaultContext
+        ..useCertificateChain(identity.cert)
+        ..usePrivateKey(identity.key, password: identity.password);
+
+      shelf.serveSecure(_handler(uri.toString()), host, port, serverContext, backlog: 5).then((server) {
+        print('Proxying at https://${server.address.host}:${server.port}');
+      });
+    } else {
+      Uri uri = new Uri(scheme: 'http', host: pubserve.hostname, port: pubserve.port);
+
+      shelf.serve(_handler(uri.toString()), host, port).then((server) {
+        print('Proxying at http://${server.address.host}:${server.port}');
+      });
+    }
   }
 
   Handler _handler(String target) {
